@@ -20,3 +20,12 @@ class Arguments:
         print(self.options)
         print(self.optionValues)
         print(self.args)
+    
+
+    
+    def hasOption(self,option):
+        return option in self.options
+        
+
+    def getOptionValue(self,option):
+        return self.optionValues.get(option)

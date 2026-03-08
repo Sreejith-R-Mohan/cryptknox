@@ -1,0 +1,2 @@
+class Generatepass:
+    pass
