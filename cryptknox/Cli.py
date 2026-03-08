@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 from lib.Arguments import Arguments
 import sys
 
