@@ -8,6 +8,7 @@ import sys,json
 from Items import Items
 from Storage import Storage
 
+import secrets, string, random
 class Cli:
 
 
@@ -76,9 +77,6 @@ class Cli:
 
             storage.save_file(encrypted)
 
-
-            
-            pass
         elif operation == 'retrieve':
             master_passwd = self._get_required('--master-password','-mp','Master Operation')
             service = self._get_required('--service','-s','Service')
@@ -99,17 +97,36 @@ class Cli:
             dict = json_data["entries"][service]
             print(dict)
             print(f"Service : {service} \nUsername: {dict['username']} \nPassword: {dict['password']} ")
-
-
-            
-
-
-
-
-
-            pass
         elif operation == 'generate':
-            pass
+            length = self._get_required('--length','-l','Length')
+            self.generate_pass(length)
+            
+        
+
+    def generate_pass(self, length):
+        # Since it is coming as a string from the command line
+        length = int(length)
+        if length < 4:
+            raise ValueError("Length must be greater than 4")
+        
+        # This will ensure the password will contain 1 lowercase, 1 uppercase , 1 digit, 1 special character
+        password = [
+            secrets.choice(string.ascii_lowercase),
+            secrets.choice(string.ascii_uppercase),
+            secrets.choice(string.digits),
+            secrets.choice(string.punctuation)
+        ]
+
+        all_char = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
+
+        for i in range(length - 4):
+            password.append(secrets.choice(all_char))
+        
+        random.shuffle(password)
+        # Convert array to string
+        password = "".join(password)
+
+        print(password)
         
 
 def main():
@@ -117,7 +134,7 @@ def main():
         if len(sys.argv)==1 or "--help" in sys.argv or "-h" in sys.argv:
             Cli.help()
             sys.exit(1)
-        if len(sys.argv) <= 3:
+        if len(sys.argv) <= 2:
             print("Oops:< Missing required arguments\n")
             Cli.help()
             sys.exit(1)   
