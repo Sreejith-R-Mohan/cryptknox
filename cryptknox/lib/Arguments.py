@@ -16,10 +16,10 @@ class Arguments:
                     i+=1
             i+=1
 
-        print(self.command)
-        print(self.options)
-        print(self.optionValues)
-        print(self.args)
+        # print(self.command)
+        # print(self.options)
+        # print(self.optionValues)
+        # print(self.args)
     
 
     

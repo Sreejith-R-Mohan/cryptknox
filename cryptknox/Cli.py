@@ -15,7 +15,87 @@ class Cli:
     allowed_options = ('--operation','-o','--master-password','-mp','--service','-s','--username','-u','--password','-p','--length','-l','--help','-h')
     @staticmethod
     def help():
-        print("Usage: cryptknox --operation store --master-password Mysecretpassword --service gmail --password mygmailpassword")
+        HELP_TEXT = """
+CryptKnox – Encrypted CLI Password Manager
+
+USAGE
+    cryptknox --operation|-o [store|retrieve|delete|generate] [OPTIONS]
+
+OPERATIONS
+
+    store
+        Store a new password entry in the encrypted vault.
+
+        Required Options:
+            --master-password, -m     Master password used to encrypt/decrypt the vault
+            --service, -s             Service name (example: gmail)
+            --username, -u            Username for the service
+            --password, -p            Password to store
+
+        Example:
+            cryptknox -o store -m MySecretPassword -s gmail -u user@gmail.com -p mypassword
+
+
+    retrieve
+        Retrieve stored credentials from the vault.
+
+        Required Options:
+            --master-password, -m     Master password used to decrypt the vault
+            --service, -s             Service name or "all"
+
+        Example:
+            cryptknox -o retrieve -m MySecretPassword -s gmail
+            cryptknox -o retrieve -m MySecretPassword -s all
+
+
+    delete
+        Delete stored credentials from the vault.
+
+        Required Options:
+            --master-password, -m     Master password used to decrypt the vault
+            --service, -s             Service name or "all"
+
+        Example:
+            cryptknox -o delete -m MySecretPassword -s gmail
+            cryptknox -o delete -m MySecretPassword -s all
+
+
+    generate
+        Generate a secure random password.
+
+        Required Options:
+            --length, -l              Length of password (must be greater than 4)
+
+        Example:
+            cryptknox -o generate -l 12
+
+
+OPTIONS
+
+    --operation, -o          Operation to perform
+    --master-password, -m    Master password for vault encryption
+    --service, -s            Service name (example: gmail) or "all"
+    --username, -u           Username associated with the service
+    --password, -p           Password to store
+    --length, -l             Length of generated password
+    --help, -h               Show this help message
+
+
+EXAMPLES
+
+    Store credentials
+        cryptknox -o store -m MySecretPassword -s gmail -u user@gmail.com -p mypassword
+
+    Retrieve all credentials
+        cryptknox -o retrieve -m MySecretPassword -s all
+
+    Generate a password
+        cryptknox -o generate -l 16
+
+    Delete credentials
+        cryptknox -o delete -m MySecretPassword -s gmail
+"""
+        print(HELP_TEXT)
 
     def __init__(self,args):
         self.args = Arguments(args)
@@ -40,7 +120,11 @@ class Cli:
         args = self.args
 
         # if has option other than allowed options raise Exception
-    
+
+        for i in args.options:
+            if i not in self.allowed_options:
+                self.help()
+                raise ValueError("Unknown arguments...")
 
         # Get operation value
         operation = self._get_required('--operation','-o','Operation')
@@ -71,7 +155,7 @@ class Cli:
                 dec_con = items.create_new_entry()
             
              # call add_new_entry in the vault
-            data = items.add_new_entry(dec_con,service,uname,passwd)
+            data = items.add_or_update_entry(dec_con,service,uname,passwd)
 
             encrypted = aes.encrypt(json.dumps(data).encode())
 
@@ -88,18 +172,32 @@ class Cli:
             # decrypt it
             aes = Aes(master_passwd)
             dec_con = aes.decrypt(data).decode()
-            print(dec_con)
             # dump json
             json_data = json.loads(dec_con)
-            print(json_data)
             # read it from the json using service Name
 
-            dict = json_data["entries"][service]
-            print(dict)
-            print(f"Service : {service} \nUsername: {dict['username']} \nPassword: {dict['password']} ")
+            # will call the function which will display the service in a formatted way
+
+            items.show_entries(json_data, service)
+
         elif operation == 'generate':
             length = self._get_required('--length','-l','Length')
             self.generate_pass(length)
+
+        elif operation == 'delete':
+            master_passwd = self._get_required('--master-password','-mp','Master Operation')
+            service = self._get_required('--service','-s','Service')
+            uname = self._get_required('--username','-u','Username')
+            # get the file
+            data = storage.load_file()
+            
+            # decrypt it
+            aes = Aes(master_passwd)
+            dec_con = aes.decrypt(data).decode()
+            print(dec_con)
+            # dump json
+            json_data = json.loads(dec_con)
+            items.delete_entry(json_data,service,uname)
             
         
 
@@ -145,4 +243,5 @@ def main():
         print(f"Error: {e}")
         sys.exit(1)
 
-main()
+if __name__ == "__main__":
+    main()
