@@ -1,18 +1,15 @@
 #! /usr/bin/python
-
-from ast import Name
-
-from lib.Arguments import Arguments
-from algorithm.Aes import Aes
+from .lib.Arguments import Arguments
+from .algorithm.Aes import Aes
 import sys,json
-from Items import Items
-from Storage import Storage
+from .Items import Items
+from .Storage import Storage
 
 import secrets, string, random
 class Cli:
 
 
-    allowed_options = ('--operation','-o','--master-password','-mp','--service','-s','--username','-u','--password','-p','--length','-l','--help','-h')
+    allowed_options = ('--operation','-o','--master-password','-m','--service','-s','--username','-u','--password','-p','--length','-l','--help','-h')
     @staticmethod
     def help():
         HELP_TEXT = """
@@ -134,7 +131,7 @@ EXAMPLES
         items = Items()
 
         if operation == 'store':   
-            master_passwd = self._get_required('--master-password','-mp','Master Operation')
+            master_passwd = self._get_required('--master-password','-m','Master Operation')
             service = self._get_required('--service','-s','Service')
             uname = self._get_required('--username','-u',"Username")
             passwd = self._get_required('--password','-p','Password')
@@ -150,7 +147,7 @@ EXAMPLES
                     decrypt_vault = aes.decrypt(file_data)
                     dec_con = json.loads(decrypt_vault)
                 except ValueError as e:
-                    print("Cannot able to decrypt the vault: Check master key"+e)
+                    print("Cannot able to decrypt the vault: Check master key", e)
             else:
                 dec_con = items.create_new_entry()
             
@@ -162,7 +159,7 @@ EXAMPLES
             storage.save_file(encrypted)
 
         elif operation == 'retrieve':
-            master_passwd = self._get_required('--master-password','-mp','Master Operation')
+            master_passwd = self._get_required('--master-password','-m','Master Operation')
             service = self._get_required('--service','-s','Service')
             
 
@@ -185,7 +182,7 @@ EXAMPLES
             self.generate_pass(length)
 
         elif operation == 'delete':
-            master_passwd = self._get_required('--master-password','-mp','Master Operation')
+            master_passwd = self._get_required('--master-password','-m','Master Operation')
             service = self._get_required('--service','-s','Service')
             uname = self._get_required('--username','-u','Username')
             # get the file
