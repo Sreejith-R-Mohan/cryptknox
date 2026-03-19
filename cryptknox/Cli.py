@@ -17,10 +17,9 @@ class Cli:
 CryptKnox – Encrypted CLI Password Manager
 
 USAGE
-cryptknox --operation|-o [store|retrieve|delete|generate] [OPTIONS]
+    cryptknox --operation|-o [store|retrieve|delete|generate] [OPTIONS]
 
 OPERATIONS
-
 
 store
     Store a new password entry in the encrypted vault.
@@ -89,7 +88,6 @@ generate
 
 OPTIONS
 
-
 --operation, -o          Operation to perform
 --master-password, -m    Master password for vault encryption
 --service, -s            Service name (example: gmail) or "all"
@@ -101,7 +99,6 @@ OPTIONS
 
 
 EXAMPLES
-
 
 Show version
     cryptknox --version
