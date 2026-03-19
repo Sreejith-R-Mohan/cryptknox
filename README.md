@@ -11,8 +11,8 @@ All stored credentials are **encrypted locally using AES encryption**, ensuring 
 
 * 🔐 **AES Encryption** for secure password storage
 * 🗂 **Store multiple accounts per service**
-* 🔍 **Retrieve specific services or all stored credentials**
-* ❌ **Delete credentials securely**
+* 🔍 **Retrieve specific accounts, services, or all credentials**
+* ❌ **Delete individual entries, services, or entire vault**
 * 🔑 **Generate strong random passwords**
 * 💻 **Simple CLI interface**
 * 📦 **Installable via PyPI**
@@ -67,9 +67,15 @@ Options:
 
 ### Retrieve Credentials
 
-Retrieve stored passwords.
+Retrieve stored passwords based on scope.
 
-Retrieve a specific service:
+Retrieve a specific account:
+
+```
+cryptknox -o retrieve -m MySecretPassword -s gmail -u user@gmail.com
+```
+
+Retrieve all accounts under a service:
 
 ```
 cryptknox -o retrieve -m MySecretPassword -s gmail
@@ -81,23 +87,41 @@ Retrieve all services:
 cryptknox -o retrieve -m MySecretPassword -s all
 ```
 
+Behavior:
+
+* `-s all` → retrieves entire vault
+* `-s <service>` → retrieves all usernames under that service
+* `-s <service> -u <username>` → retrieves only that account
+
 ---
 
 ### Delete Credentials
 
-Delete stored credentials.
+Delete stored credentials based on scope.
 
-Delete a specific service entry:
+Delete a specific account:
+
+```
+cryptknox -o delete -m MySecretPassword -s gmail -u user@gmail.com
+```
+
+Delete all accounts under a service:
 
 ```
 cryptknox -o delete -m MySecretPassword -s gmail
 ```
 
-Delete all entries:
+Delete entire vault:
 
 ```
 cryptknox -o delete -m MySecretPassword -s all
 ```
+
+Behavior:
+
+* `-s all` → deletes entire vault (confirmation required)
+* `-s <service>` → deletes all usernames under that service
+* `-s <service> -u <username>` → deletes only that account
 
 ---
 
@@ -132,6 +156,12 @@ Store credentials:
 cryptknox -o store -m MySecretPassword -s github -u myuser -p mypassword
 ```
 
+Retrieve specific account:
+
+```
+cryptknox -o retrieve -m MySecretPassword -s github -u myuser
+```
+
 Retrieve all credentials:
 
 ```
@@ -144,19 +174,31 @@ Generate a strong password:
 cryptknox -o generate -l 16
 ```
 
-Delete credentials:
+Delete specific account:
+
+```
+cryptknox -o delete -m MySecretPassword -s github -u myuser
+```
+
+Delete service:
 
 ```
 cryptknox -o delete -m MySecretPassword -s github
+```
+
+Delete entire vault:
+
+```
+cryptknox -o delete -m MySecretPassword -s all
 ```
 
 ---
 
 ## Security Notes
 
-* All credentials are **encrypted before being stored**.
-* Only the **master password can decrypt the vault**.
-* The master password is **never stored**.
+* All credentials are **encrypted before being stored**
+* Only the **master password can decrypt the vault**
+* The master password is **never stored**
 
 ⚠️ If the master password is lost, the vault **cannot be recovered**.
 

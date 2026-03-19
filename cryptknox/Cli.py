@@ -1,96 +1,131 @@
-#! /usr/bin/python
+# ! /usr/bin/python
 from .lib.Arguments import Arguments
 from .algorithm.Aes import Aes
+from .algorithm.Generatepass import Generatepass
 import sys,json
 from .Items import Items
 from .Storage import Storage
+from . import __version__
 
-import secrets, string, random
 class Cli:
 
 
-    allowed_options = ('--operation','-o','--master-password','-m','--service','-s','--username','-u','--password','-p','--length','-l','--help','-h')
+    allowed_options = ('--operation','-o','--master-password','-m','--service','-s','--username','-u','--password','-p','--length','-l','--help','-h','--version','-v')
     @staticmethod
     def help():
         HELP_TEXT = """
 CryptKnox – Encrypted CLI Password Manager
 
 USAGE
-    cryptknox --operation|-o [store|retrieve|delete|generate] [OPTIONS]
+cryptknox --operation|-o [store|retrieve|delete|generate] [OPTIONS]
 
 OPERATIONS
 
-    store
-        Store a new password entry in the encrypted vault.
+```
+store
+    Store a new password entry in the encrypted vault.
 
-        Required Options:
-            --master-password, -m     Master password used to encrypt/decrypt the vault
-            --service, -s             Service name (example: gmail)
-            --username, -u            Username for the service
-            --password, -p            Password to store
+    Required Options:
+        --master-password, -m     Master password used to encrypt/decrypt the vault
+        --service, -s             Service name (example: gmail)
+        --username, -u            Username for the service
+        --password, -p            Password to store
 
-        Example:
-            cryptknox -o store -m MySecretPassword -s gmail -u user@gmail.com -p mypassword
-
-
-    retrieve
-        Retrieve stored credentials from the vault.
-
-        Required Options:
-            --master-password, -m     Master password used to decrypt the vault
-            --service, -s             Service name or "all"
-
-        Example:
-            cryptknox -o retrieve -m MySecretPassword -s gmail
-            cryptknox -o retrieve -m MySecretPassword -s all
+    Example:
+        cryptknox -o store -m MySecretPassword -s gmail -u user@gmail.com -p mypassword
 
 
-    delete
-        Delete stored credentials from the vault.
+retrieve
+    Retrieve stored credentials from the vault.
 
-        Required Options:
-            --master-password, -m     Master password used to decrypt the vault
-            --service, -s             Service name or "all"
+    Required Options:
+        --master-password, -m     Master password used to decrypt the vault
+        --service, -s             Service name or "all"
 
-        Example:
-            cryptknox -o delete -m MySecretPassword -s gmail
-            cryptknox -o delete -m MySecretPassword -s all
+    Optional Options:
+        --username, -u            Retrieve a specific username under a service
+
+    Behavior:
+        - If --service all → retrieves all entries
+        - If --service <service> → retrieves all usernames under that service
+        - If --service <service> + --username <username> → retrieves only that account
+
+    Examples:
+        cryptknox -o retrieve -m MySecretPassword -s gmail
+        cryptknox -o retrieve -m MySecretPassword -s gmail -u user@gmail.com
+        cryptknox -o retrieve -m MySecretPassword -s all
 
 
-    generate
-        Generate a secure random password.
+delete
+    Delete stored credentials from the vault.
 
-        Required Options:
-            --length, -l              Length of password (must be greater than 4)
+    Required Options:
+        --master-password, -m     Master password used to decrypt the vault
+        --service, -s             Service name or "all"
 
-        Example:
-            cryptknox -o generate -l 12
+    Optional Options:
+        --username, -u            Delete a specific username under a service
 
+    Behavior:
+        - If --service all → deletes all entries (confirmation required)
+        - If --service <service> → deletes all usernames under that service
+        - If --service <service> + --username <username> → deletes only that account
+
+    Examples:
+        cryptknox -o delete -m MySecretPassword -s gmail
+        cryptknox -o delete -m MySecretPassword -s gmail -u user@gmail.com
+        cryptknox -o delete -m MySecretPassword -s all
+
+
+generate
+    Generate a secure random password.
+
+    Required Options:
+        --length, -l              Length of password (must be greater than 4)
+
+    Example:
+        cryptknox -o generate -l 12
+```
 
 OPTIONS
 
-    --operation, -o          Operation to perform
-    --master-password, -m    Master password for vault encryption
-    --service, -s            Service name (example: gmail) or "all"
-    --username, -u           Username associated with the service
-    --password, -p           Password to store
-    --length, -l             Length of generated password
-    --help, -h               Show this help message
-
+```
+--operation, -o          Operation to perform
+--master-password, -m    Master password for vault encryption
+--service, -s            Service name (example: gmail) or "all"
+--username, -u           Username associated with the service
+--password, -p           Password to store
+--length, -l             Length of generated password
+--help, -h               Show this help message
+--version, -v            Show the installed version of CryptKnox
+```
 
 EXAMPLES
 
-    Store credentials
-        cryptknox -o store -m MySecretPassword -s gmail -u user@gmail.com -p mypassword
+```
+Show version
+    cryptknox --version
 
-    Retrieve all credentials
-        cryptknox -o retrieve -m MySecretPassword -s all
+Store credentials
+    cryptknox -o store -m MySecretPassword -s gmail -u user@gmail.com -p mypassword
 
-    Generate a password
-        cryptknox -o generate -l 16
+Retrieve all credentials
+    cryptknox -o retrieve -m MySecretPassword -s all
 
-    Delete credentials
-        cryptknox -o delete -m MySecretPassword -s gmail
+Retrieve specific account
+    cryptknox -o retrieve -m MySecretPassword -s gmail -u user@gmail.com
+
+Generate a password
+    cryptknox -o generate -l 16
+
+Delete all credentials under a service
+    cryptknox -o delete -m MySecretPassword -s gmail
+
+Delete specific account
+    cryptknox -o delete -m MySecretPassword -s gmail -u user@gmail.com
+
+Delete entire vault
+    cryptknox -o delete -m MySecretPassword -s all
 """
         print(HELP_TEXT)
 
@@ -146,8 +181,8 @@ EXAMPLES
                 try:
                     decrypt_vault = aes.decrypt(file_data)
                     dec_con = json.loads(decrypt_vault)
-                except ValueError as e:
-                    print("Cannot able to decrypt the vault: Check master key", e)
+                except Exception as e:
+                    print("Cannot able to decrypt the vault: Check master key")
             else:
                 dec_con = items.create_new_entry()
             
@@ -161,6 +196,10 @@ EXAMPLES
         elif operation == 'retrieve':
             master_passwd = self._get_required('--master-password','-m','Master Operation')
             service = self._get_required('--service','-s','Service')
+
+            uname = None
+            if self.args.hasOption('-u') or self.args.hasOption('--username'):
+                uname = self.args.getOptionValue('--username') or self.args.getOptionValue('-u')
             
 
             # get the file
@@ -175,64 +214,61 @@ EXAMPLES
 
             # will call the function which will display the service in a formatted way
 
-            items.show_entries(json_data, service)
+            items.show_entries(json_data,uname,service) # check this
 
         elif operation == 'generate':
             length = self._get_required('--length','-l','Length')
-            self.generate_pass(length)
+
+            genpass = Generatepass()
+            password = genpass.generate_pass(length)
+            print(f"Generated password : {password}")
+
 
         elif operation == 'delete':
             master_passwd = self._get_required('--master-password','-m','Master Operation')
             service = self._get_required('--service','-s','Service')
-            uname = self._get_required('--username','-u','Username')
+            uname = None
+            if self.args.hasOption('-u') or self.args.hasOption('--username'):
+                uname = self.args.getOptionValue('--username') or self.args.getOptionValue('-u')
             # get the file
             data = storage.load_file()
             
             # decrypt it
             aes = Aes(master_passwd)
             dec_con = aes.decrypt(data).decode()
-            print(dec_con)
+            # print(dec_con)
+
+
             # dump json
             json_data = json.loads(dec_con)
-            items.delete_entry(json_data,service,uname)
-            
-        
+            new_json = items.delete_entry(json_data,uname,service)
+            # print(new_json)
 
-    def generate_pass(self, length):
-        # Since it is coming as a string from the command line
-        length = int(length)
-        if length < 4:
-            raise ValueError("Length must be greater than 4")
-        
-        # This will ensure the password will contain 1 lowercase, 1 uppercase , 1 digit, 1 special character
-        password = [
-            secrets.choice(string.ascii_lowercase),
-            secrets.choice(string.ascii_uppercase),
-            secrets.choice(string.digits),
-            secrets.choice(string.punctuation)
-        ]
 
-        all_char = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
+            file_data = storage.load_file()
 
-        for i in range(length - 4):
-            password.append(secrets.choice(all_char))
-        
-        random.shuffle(password)
-        # Convert array to string
-        password = "".join(password)
+            new_enc = aes.encrypt(json.dumps(new_json).encode())
 
-        print(password)
+            storage.save_file(new_enc)
+
+    
         
 
 def main():
     try:
-        if len(sys.argv)==1 or "--help" in sys.argv or "-h" in sys.argv:
+        args = sys.argv[1:]
+        # print(sys.argv)
+        if not args:
             Cli.help()
-            sys.exit(1)
-        if len(sys.argv) <= 2:
-            print("Oops:< Missing required arguments\n")
+            sys.exit(0)
+
+        if "--help" in args or "-h" in args:
             Cli.help()
-            sys.exit(1)   
+            sys.exit(0)
+
+        if "--version" in args or "-v" in args:
+            print(f"cryptknox {__version__}")
+            sys.exit(0)
 
         Cli(sys.argv).run()
 

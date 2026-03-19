@@ -1,4 +1,6 @@
-import json
+from tabulate import tabulate
+
+
 class Items:
     
 
@@ -6,7 +8,10 @@ class Items:
         return {
             "entries":{}
         }
-
+    
+    @staticmethod
+    def print_table(rows):
+        print(tabulate(rows, headers=["Service", "Username", "Password"], tablefmt="pretty"))
 
     def add_or_update_entry(self, vault, service, uname, passwd):
         vault["entries"].setdefault(service,{})
@@ -31,7 +36,7 @@ class Items:
 
         return vault
     
-    def delete_entry(self, vault, service, uname):
+    def delete_entry(self, vault, uname, service):
 
         entries = vault.get("entries", {})
 
@@ -46,47 +51,79 @@ class Items:
                 print("Operation cancelled.")
 
             return vault
-
+        
         # delete specific account
-        if service not in entries:
-            print("Service not found")
+        if uname:
+            if service not in entries:
+                print("Service not found")
+                return vault
+
+            if uname not in entries[service]:
+                print("Username not found")
+                return vault
+
+            del entries[service][uname]
+
+            print(f"{uname} deleted successfully")
+
+            # remove service if empty
+            if not entries[service]:
+                del entries[service]
+
             return vault
+        else:
+            if service not in entries:
+                print("Service not found")
+                return vault
+            acc = entries.get(service)
+            length = len(acc)
+            
+            if length>0:
+                choice = input(f"Found {length} entries under {service}.\n Do you want to wipe them al(y/n) ?")
+                if choice.lower() == "y":
+                    del entries[service]
+                    print(f"All entries deleted under {service}")
+                else:
+                    print("Operation cancelled.")
 
-        if uname not in entries[service]:
-            print("Username not found")
             return vault
-
-        del entries[service][uname]
-
-        print(f"{uname} deleted successfully")
-
-        # remove service if empty
-        if not entries[service]:
-            del entries[service]
-
-        return vault
     
-    def show_entries(self, vault, service="all"):
+    def show_entries(self, vault, uname, service="all"):
         entries = vault.get("entries",{})
-
-        if service.lower == 'all':
+        rows = []
+        if service.lower() == 'all':
             if not entries:
                 print("Vault is empty...")
                 return
             
             for sname, account in entries.items():
-                print(f"\nService {sname}")
                 for uname, passwd in account.items():
-                    print(f"\nUsername : {uname} | Password : {passwd}")
+                    rows.append([sname, uname, passwd])
+        elif uname:
+            accounts = entries.get(service)
 
+            if not accounts:
+                print("Service not found.")
+                return
+
+            passwd = accounts.get(uname)
+
+            if not passwd:
+                print("Username not found.")
+                return
+
+            rows.append([service, uname, passwd])
         else:
+            # print(entries)
+
             accounts = entries.get(service)
 
             if not accounts:
                 print("Service not found.")
                 return
             
-            print(f"Service:{service}")
-            for uname, passwd in account.items():
-                    print(f"\nUsername : {uname} | Password : {passwd}")
+            for uname, passwd in accounts.items():
+                    rows.append([service, uname, passwd])
+        
+        self.print_table(rows)
 
