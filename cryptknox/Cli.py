@@ -2,7 +2,8 @@
 from .lib.Arguments import Arguments
 from .algorithm.Aes import Aes
 from .algorithm.Generatepass import Generatepass
-import sys,json
+import sys,json,pyfiglet
+from colorama import Fore, Style, init
 from .Items import Items
 from .Storage import Storage
 from . import __version__
