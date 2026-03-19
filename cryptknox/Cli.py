@@ -21,7 +21,7 @@ cryptknox --operation|-o [store|retrieve|delete|generate] [OPTIONS]
 
 OPERATIONS
 
-```
+
 store
     Store a new password entry in the encrypted vault.
 
@@ -85,11 +85,11 @@ generate
 
     Example:
         cryptknox -o generate -l 12
-```
+
 
 OPTIONS
 
-```
+
 --operation, -o          Operation to perform
 --master-password, -m    Master password for vault encryption
 --service, -s            Service name (example: gmail) or "all"
@@ -98,11 +98,11 @@ OPTIONS
 --length, -l             Length of generated password
 --help, -h               Show this help message
 --version, -v            Show the installed version of CryptKnox
-```
+
 
 EXAMPLES
 
-```
+
 Show version
     cryptknox --version
 
